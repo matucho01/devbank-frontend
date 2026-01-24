@@ -1,9 +1,7 @@
 pipeline {
   agent { label 'ec2-agent1' }
 
-  tools {
-    nodejs 'node25'
-  }
+  tools { nodejs 'node25' }
 
   environment {
     IMAGE_REPO = "matucho01/devbank-frontend"
@@ -11,9 +9,7 @@ pipeline {
   }
 
   stages {
-    stage('Checkout') {
-      steps { checkout scm }
-    }
+    stage('Checkout') { steps { checkout scm } }
 
     stage('Install') {
       steps {
@@ -24,9 +20,7 @@ pipeline {
     }
 
     stage('Build') {
-      steps {
-        sh 'npm run build'
-      }
+      steps { sh 'npm run build' }
     }
 
     stage('Docker Build') {
@@ -37,11 +31,13 @@ pipeline {
     }
 
     stage('Docker Push') {
-      withCredentials([usernamePassword(credentialsId: 'dockerhub-matucho01', usernameVariable: 'DH_USER', passwordVariable: 'DH_PASS')]) {
-        sh '''
-          echo "$DH_PASS" | docker login -u "$DH_USER" --password-stdin
-          docker push ${IMAGE_REPO}:${IMAGE_TAG}
-        '''
+      steps {
+        withCredentials([usernamePassword(credentialsId: 'dockerhub-matucho01', usernameVariable: 'DH_USER', passwordVariable: 'DH_PASS')]) {
+          sh '''
+            echo "$DH_PASS" | docker login -u "$DH_USER" --password-stdin
+            docker push ${IMAGE_REPO}:${IMAGE_TAG}
+          '''
+        }
       }
     }
   }
