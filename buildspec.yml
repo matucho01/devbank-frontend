@@ -1,0 +1,22 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo "Login a DockerHub..."
+      - echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+      - SHORT_SHA=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - IMAGE_URI="$DOCKERHUB_USERNAME/devbank-frontend:$SHORT_SHA"
+  build:
+    commands:
+      - echo "Build image $IMAGE_URI"
+      - docker build -t "$IMAGE_URI" .
+  post_build:
+    commands:
+      - echo "Push image $IMAGE_URI"
+      - docker push "$IMAGE_URI"
+      - printf '[{"name":"frontend","imageUri":"%s"}]' "$IMAGE_URI" > imagedefinitions.json
+
+artifacts:
+  files:
+    - imagedefinitions.json
