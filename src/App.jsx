@@ -19,7 +19,7 @@ export default function App() {
   return (
     <div style={{ maxWidth: 720, margin: "40px auto", fontFamily: "Arial" }}>
       <h1>DevBank Frontend</h1>
-      <p>Escribe la URL del backend (ej: http://&lt;IP&gt;:3000) y prueba /health.</p>
+      <p>Ingresa la URL del backend (ej: http://&lt;IP&gt;:3000) y prueba /health.</p>
 
       <input
         style={{ width: "100%", padding: 10 }}
