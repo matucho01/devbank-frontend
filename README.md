@@ -1,16 +1,49 @@
-# React + Vite
+## DevBank Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + Vite SPA with a single page to test a configurable backend `/health` endpoint. Uses Material UI for styling and includes ready-to-use pipelines for Docker, Jenkins, and AWS CodeBuild.
 
-Currently, two official plugins are available:
+### Quick view
+- Single screen to enter the backend base URL and test `/health` via `fetch`.
+- Pretty-printed JSON response (or error message).
+- UI built with Material UI components (button, typography, container, card) in [src/App.jsx](src/App.jsx).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### Requirements
+- Node.js 20+ (build image uses `node:20-alpine`).
+- npm 9+.
 
-## React Compiler
+### Install and run locally
+- Install deps: `npm ci`
+- Dev server: `npm run dev` (Vite defaults to `http://localhost:5173`).
+- Lint: `npm run lint`
+- Production build: `npm run build`
+- Preview build: `npm run preview`
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### How to use the page
+- Enter the backend base URL, e.g. `http://localhost:3000`.
+- Click “Probar /health”; the app sends `GET {baseUrl}/health` and shows the JSON response.
 
-## Expanding the ESLint configuration
+### Docker
+- Build locally: `docker build -t devbank-frontend:local .`
+- Run: `docker run -p 8080:80 devbank-frontend:local` then open `http://localhost:8080`.
+- Two-stage image: Vite build on Node 20 Alpine, static serve with Nginx (see [Dockerfile](Dockerfile)).
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Jenkins
+- Declarative pipeline in [Jenkinsfile](Jenkinsfile).
+- Uses agent label `ec2-agent1` and Node installation `node25`.
+- Steps: checkout → `npm ci` → `npm run build` → Docker image build → push to Docker Hub using credential `dockerhub-matucho01`.
+- Vars: `IMAGE_REPO` (`matucho01/devbank-frontend`), `IMAGE_TAG` (`v${BUILD_NUMBER}`).
+
+### AWS CodeBuild
+- Defined in [buildspec.yml](buildspec.yml).
+- Phases: Docker Hub login with `$DOCKERHUB_USERNAME` and `$DOCKERHUB_TOKEN`, image build with short commit tag, push, and `imagedefinitions.json` generation for ECS/ECR-like deploys.
+- Artifact: `imagedefinitions.json`.
+
+### Relevant structure
+- [src/App.jsx](src/App.jsx): UI and `/health` check logic with Material UI.
+- [Dockerfile](Dockerfile): multi-stage build and Nginx static serve.
+- [Jenkinsfile](Jenkinsfile): Docker Hub CI/CD pipeline.
+- [buildspec.yml](buildspec.yml): AWS CodeBuild pipeline to build and publish the image.
+
+### Notes
+- Ensure Docker Hub variables are set in both pipelines before running.
+- Adjust the base URL to your environment (localhost, EC2, ECS, etc.).
